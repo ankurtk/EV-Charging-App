@@ -1,8 +1,29 @@
-import { View, Text, Image, StyleSheet } from "react-native";
+import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
 import React from "react";
+import * as WebBrowser from "expo-web-browser";
 import Color from "../../Utils/Color";
+import { useWarmUpBrowser } from "../../hooks/useWarmUpBrowser";
+import { useOAuth } from "@clerk/clerk-expo";
 
+WebBrowser.maybeCompleteAuthSession();
 export default function LoginScreen() {
+  useWarmUpBrowser();
+
+  const { startOAuthFlow } = useOAuth({ strategy: "oauth_google" });
+  const login = async () => {
+    try {
+      const { createdSessionId, signIn, signUp, setActive } =
+        await startOAuthFlow();
+
+      if (createdSessionId) {
+        setActive({ session: createdSessionId });
+      } else {
+        // Use signIn or signUp for next steps such as MFA
+      }
+    } catch (err) {
+      console.error("OAuth error", err);
+    }
+  };
   return (
     <View style={styles.container}>
       <Image
@@ -20,7 +41,7 @@ export default function LoginScreen() {
         <Text style={styles.desc}>
           Find EV charging station near you in once click
         </Text>
-        <View style={styles.button}>
+        <TouchableOpacity style={styles.button} onPress={login}>
           <Text
             style={{
               color: Color.WHITE,
@@ -31,7 +52,7 @@ export default function LoginScreen() {
           >
             Login With Google
           </Text>
-        </View>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -48,7 +69,7 @@ const styles = StyleSheet.create({
   logoImage: {
     width: 80,
     height: 80,
-    objectFit: "container",
+    objectFit: "contain",
   },
   bgImage: {
     width: 300,
